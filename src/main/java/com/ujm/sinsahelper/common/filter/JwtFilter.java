@@ -14,6 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
@@ -25,7 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = extractToken(request.getHeader(AUTHORIZATION));
+        String token = extractToken(Optional.of(request.getHeader(AUTHORIZATION)).orElse(null));
 
         if (StringUtils.hasText(token) && jwtUtil.validateJwtToken(token)) {
 
@@ -38,9 +39,10 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(String fullToken) {
-        if (!fullToken.startsWith(JWT_PREFIX)) {
+        if (!fullToken.startsWith(JWT_PREFIX) || !StringUtils.hasText(fullToken)) {
             return null;
         }
+
         return fullToken.substring(JWT_PREFIX.length());
     }
 }
