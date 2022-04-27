@@ -2,6 +2,7 @@ package com.ujm.sinsahelper.common.filter;
 
 import com.ujm.sinsahelper.common.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,19 +15,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
 
 @RequiredArgsConstructor
+@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    public static final String AUTHORIZATION = "Authorization";
+    public static final String AUTHORIZATION = "authorization";
     public static final String JWT_PREFIX = "Bearer ";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = extractToken(Optional.of(request.getHeader(AUTHORIZATION)).orElse(null));
+        String token = extractToken(request.getHeader(AUTHORIZATION));
 
         if (StringUtils.hasText(token) && jwtUtil.validateJwtToken(token)) {
 
@@ -39,10 +40,10 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private String extractToken(String fullToken) {
-        if (!fullToken.startsWith(JWT_PREFIX) || !StringUtils.hasText(fullToken)) {
+        if (!StringUtils.hasText(fullToken)) {
             return null;
         }
 
-        return fullToken.substring(JWT_PREFIX.length());
+        return fullToken.startsWith(JWT_PREFIX) ? fullToken.substring(JWT_PREFIX.length()) : null;
     }
 }

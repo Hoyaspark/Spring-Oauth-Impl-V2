@@ -4,15 +4,20 @@ import com.ujm.sinsahelper.domain.AuthRole;
 import com.ujm.sinsahelper.domain.Member;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.DefaultClaims;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.Date;
 
+@Slf4j
 public class JwtUtil {
 
     private static final String TOKEN_TYPE = "Bearer";
@@ -29,9 +34,9 @@ public class JwtUtil {
                 .getBody();
 
         String userEmail = claims.getSubject();
-        AuthRole authRole = claims.get(ROLE_KEY, AuthRole.class);
+        String authRole = claims.get(ROLE_KEY, String.class);
 
-        return new UsernamePasswordAuthenticationToken(userEmail, "", Collections.singleton(new SimpleGrantedAuthority(authRole.name())));
+        return new UsernamePasswordAuthenticationToken(userEmail, "", Collections.singleton(new SimpleGrantedAuthority(authRole)));
     }
 
     public JwtTokenDTO generateToken(Member member) {
@@ -41,7 +46,8 @@ public class JwtUtil {
                 .accessToken(Jwts.builder()
                         .signWith(SignatureAlgorithm.HS256, jwtKey)
                         .setSubject(member.getEmail())
-                        .claim(ROLE_KEY, member.getAuthRole())
+                        .claim(ROLE_KEY, member.getAuthRole().name())
+                        .setExpiration(new Date(1000 * 60 * 60))
                         .compact())
                 .refreshToken(null)
                 .build();

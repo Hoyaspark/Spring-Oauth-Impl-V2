@@ -165,7 +165,7 @@ function Preference({ main, sub, getSearchResult }) {
     //   qualityPreferenc: qualityPreferenc,
     // };
     const headers = {
-      Authorization: localStorage.getItem('token'),
+      Authorization: 'Bearer ' + localStorage.getItem('token'),
     };
 
     getSearchResult(
