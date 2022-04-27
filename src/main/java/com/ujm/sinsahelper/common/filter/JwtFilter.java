@@ -18,37 +18,29 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     public static final String AUTHORIZATION = "Authorization";
     public static final String JWT_PREFIX = "Bearer ";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    //KCH : check1
-//        String fullToken = request.getHeader(AUTHORIZATION);
 
-        String fullToken = request.getHeader(AUTHORIZATION);
+        String token = extractToken(request.getHeader(AUTHORIZATION));
 
-        System.out.println("\nfullToken = " + fullToken);
-        if (StringUtils.hasText(fullToken)) {
+        if (StringUtils.hasText(token) && jwtUtil.validateJwtToken(token)) {
 
-            String token = fullToken;
+            Authentication authentication = jwtUtil.getAuthentication(token);
 
-            System.out.println("\ntoken = " + token);
-
-            String userEmail = jwtUtil.parseJwtToken(token);
-
-            System.out.println("userEmail = " + userEmail + ":::");
-
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userEmail, null);
-
-            Authentication authenticate = authenticationManager.authenticate(authenticationToken);
-
-            SecurityContextHolder.getContext().setAuthentication(authenticate);
-
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractToken(String fullToken) {
+        if (!fullToken.startsWith(JWT_PREFIX)) {
+            return null;
+        }
+        return fullToken.substring(JWT_PREFIX.length());
     }
 }
